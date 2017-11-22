@@ -64,6 +64,7 @@ public:
 
 class RobotStatePublisher : public robot_kdl_tree::RobotKDLTree
 {
+  ros::NodeHandle nh_;
 public:
   virtual bool init();
 
@@ -99,6 +100,7 @@ private:
   bool urdf_changed_;
   MimicMap mimic_;
   boost::shared_mutex mimic_mtx_;
+  ros::Publisher urdf_update_pub_;
 };
 
 

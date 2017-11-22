@@ -37,6 +37,7 @@
 #include "robot_state_publisher/robot_state_publisher.h"
 #include <kdl/frames_io.hpp>
 #include <tf_conversions/tf_kdl.h>
+#include <std_msgs/Time.h>
 
 using namespace std;
 using namespace ros;
@@ -47,6 +48,7 @@ namespace robot_state_publisher{
 
   RobotStatePublisher::RobotStatePublisher(const urdf::Model m)
     : initialized_(false)
+    , urdf_update_pub_(nh_.advertise<std_msgs::Time>("/robot/update", 1))
   {
     setJointMimicMap(m);
   }
@@ -128,6 +130,9 @@ namespace robot_state_publisher{
     {
       urdf_changed_ = false;
       setRobotDescription();
+      std_msgs::Time msg;
+      msg.data = ros::Time::now();
+      urdf_update_pub_.publish(msg);
     }
   }
 
