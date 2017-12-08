@@ -35,15 +35,15 @@
 /* Author: Wim Meeussen */
 
 #include <ros/ros.h>
-#include "robot_state_publisher/robot_state_publisher.h"
-#include "robot_state_publisher/joint_state_listener.h"
+#include "mutable_robot_state_publisher/robot_state_publisher.h"
+#include "mutable_robot_state_publisher/joint_state_listener.h"
 #include <kdl_parser/kdl_parser.hpp>
 
 
 using namespace std;
 using namespace ros;
 using namespace KDL;
-using namespace robot_state_publisher;
+using namespace mutable_robot_state_publisher;
 
 JointStateListener::JointStateListener(const urdf::Model&  m)
   : state_publisher_(m)

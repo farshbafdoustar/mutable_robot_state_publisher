@@ -34,51 +34,77 @@
 
 /* Author: Wim Meeussen */
 
-#ifndef JOINT_STATE_LISTENER_H
-#define JOINT_STATE_LISTENER_H
+#ifndef ROBOT_STATE_PUBLISHER_H
+#define ROBOT_STATE_PUBLISHER_H
 
-#include <urdf/model.h>
-#include <kdl/tree.hpp>
 #include <ros/ros.h>
-#include <sensor_msgs/JointState.h>
-#include "robot_state_publisher/robot_state_publisher.h"
+#include <boost/scoped_ptr.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <tf/tf.h>
+#include <tf/transform_broadcaster.h>
+#include <kdl/frames.hpp>
+#include <kdl/segment.hpp>
+#include <kdl/tree.hpp>
+#include <mutable_robot_state_publisher/robot_kdl_tree.h>
+#include <urdf/model.h>
 
-using namespace std;
-using namespace ros;
-using namespace KDL;
+typedef std::map<std::string, boost::shared_ptr<urdf::JointMimic> > MimicMap;
+namespace mutable_robot_state_publisher{
 
-typedef boost::shared_ptr<sensor_msgs::JointState const> JointStateConstPtr;
-
-namespace robot_state_publisher{
-
-class JointStateListener{
+class SegmentPair
+{
 public:
+  SegmentPair(const KDL::Segment& p_segment, const std::string& p_root, const std::string& p_tip):
+    segment(p_segment), root(p_root), tip(p_tip){}
+
+  KDL::Segment segment;
+  std::string root, tip;
+};
+
+
+class RobotStatePublisher : public robot_kdl_tree::RobotKDLTree
+{
+  ros::NodeHandle nh_;
+public:
+  virtual bool init();
+
+  virtual void onURDFSwap(const std::string &link_name);
+
   /** Constructor
    * \param tree The kinematic model of a robot, represented by a KDL Tree
    */
-  JointStateListener(const urdf::Model& m);
-  bool init();
+  RobotStatePublisher(const urdf::Model m);
 
   /// Destructor
-  ~JointStateListener();
+  ~RobotStatePublisher(){};
+
+  /** Publish transforms to tf
+   * \param joint_positions A map of joint names and joint positions.
+   * \param time The time at which the joint positions were recorded
+   */
+  void publishTransforms(const std::map<std::string, double>& joint_positions, const ros::Time& time, const std::string& tf_prefix);
+  void publishFixedTransforms();
+  void publishFixedTransforms(const std::string& tf_prefix);
+  void setRobotDescriptionIfChanged();
+  void setJointMimicMap(const urdf::Model& model);
+  bool getJointMimicPositions(std::map<std::string, double>& joint_positions);
 
 private:
-  void callbackJointState(const JointStateConstPtr& state);
-  void callbackFixedJoint(const ros::TimerEvent& e);
-  void callbackSaveUrdf(const ros::TimerEvent& e);
+  void addChildren(const KDL::SegmentMap::const_iterator segment);
 
-  std::string tf_prefix_;
-  Duration publish_interval_;
-  Duration save_interval_;
-  robot_state_publisher::RobotStatePublisher state_publisher_;
-  Subscriber joint_state_sub_;
-  ros::Timer pub_timer_;
-  ros::Timer save_timer_;
-  ros::Time last_callback_time_;
-  std::map<std::string, ros::Time> last_publish_time_;
 
+  std::map<std::string, SegmentPair> segments_, segments_fixed_;
+  tf::TransformBroadcaster tf_broadcaster_;
+
+  bool initialized_;
+  bool urdf_changed_;
+  MimicMap mimic_;
+  boost::shared_mutex mimic_mtx_;
+  ros::Publisher urdf_update_pub_;
 };
-}
 
+
+
+}
 
 #endif

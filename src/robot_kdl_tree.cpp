@@ -31,7 +31,7 @@
 // Author: Daniel Cookson
 // Maintainer: Ian McMahon <imcmahon@rethinkrobotics.com>
 
-#include "robot_state_publisher/robot_kdl_tree.h"
+#include "mutable_robot_state_publisher/robot_kdl_tree.h"
 #include <kdl_parser/kdl_parser.hpp>
 #include <string>
 

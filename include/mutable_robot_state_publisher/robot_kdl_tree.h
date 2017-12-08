@@ -34,7 +34,7 @@
 #ifndef ROBOT_KDL_TREE_H_
 #define ROBOT_KDL_TREE_H_
 
-#include <robot_state_publisher/robot_urdf.h>
+#include <mutable_robot_state_publisher/robot_urdf.h>
 
 namespace robot_kdl_tree {
 

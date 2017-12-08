@@ -1,5 +1,5 @@
 <package>
-  <name>robot_state_publisher</name>
+  <name>mutable_robot_state_publisher</name>
   <version>1.10.4</version>
   <description>
     This package allows you to publish the state of a robot to

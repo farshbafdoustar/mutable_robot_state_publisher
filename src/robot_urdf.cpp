@@ -31,7 +31,7 @@
 // Author: Daniel Cookson
 // Maintainer: Ian McMahon <imcmahon@rethinkrobotics.com>
 
-#include "robot_state_publisher/robot_urdf.h"
+#include "mutable_robot_state_publisher/robot_urdf.h"
 #include <urdf_parser/urdf_parser.h>
 
 namespace robot_urdf {
@@ -197,7 +197,7 @@ bool RobotURDF::regenerateUrdf()
 
 
 // URDFConfiguration subscriber callback.
-void RobotURDF::onURDFConfigurationMsg(const robot_state_publisher::URDFConfiguration &config)
+void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDFConfiguration &config)
 {
   const std::string & linkName = config.link;
   if (linkName.empty())

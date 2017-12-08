@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
-project(robot_state_publisher)
+project(mutable_robot_state_publisher)
 
 find_package(orocos_kdl REQUIRED)
 find_package(catkin REQUIRED
   COMPONENTS roscpp rosconsole rostime tf tf_conversions kdl_parser
   cmake_modules std_msgs urdf
 )
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 add_message_files(DIRECTORY msg FILES
   URDFConfiguration.msg

@@ -34,7 +34,7 @@
 
 /* Author: Wim Meeussen */
 
-#include "robot_state_publisher/robot_state_publisher.h"
+#include "mutable_robot_state_publisher/robot_state_publisher.h"
 #include <kdl/frames_io.hpp>
 #include <tf_conversions/tf_kdl.h>
 #include <std_msgs/Time.h>
@@ -44,7 +44,7 @@ using namespace ros;
 
 
 
-namespace robot_state_publisher{
+namespace mutable_robot_state_publisher{
 
   RobotStatePublisher::RobotStatePublisher(const urdf::Model m)
     : initialized_(false)
@@ -62,13 +62,13 @@ namespace robot_state_publisher{
       initialized_ = true;
     }
 
-    if (!initialized_)  ROS_ERROR("robot_state_publisher:  failed to initialize!");
+    if (!initialized_)  ROS_ERROR("mutable_robot_state_publisher:  failed to initialize!");
     return initialized_;
   }
 
   void RobotStatePublisher::setJointMimicMap(const urdf::Model& model)
   {
-    ROS_DEBUG("robot_state_publisher: Updating MimicMap.");
+    ROS_DEBUG("mutable_robot_state_publisher: Updating MimicMap.");
     // get exclusive access for writing
     boost::unique_lock<boost::shared_mutex> lock(mimic_mtx_);
     mimic_.clear();
@@ -85,7 +85,7 @@ namespace robot_state_publisher{
     boost::shared_lock<boost::shared_mutex> lock(mimic_mtx_, boost::try_to_lock);
     if (!lock.owns_lock())
     {
-      ROS_DEBUG("robot_state_publisher: Failed to update positions for Mimic joints -- could not get lock");
+      ROS_DEBUG("mutable_robot_state_publisher: Failed to update positions for Mimic joints -- could not get lock");
       return false;
     }
     for(MimicMap::const_iterator i = mimic_.begin(); i != mimic_.end(); i++){
@@ -119,7 +119,7 @@ namespace robot_state_publisher{
       setJointMimicMap(*urdf_ptr);
     }
     else{
-      ROS_ERROR("robot_state_publisher: failed retrieve Robot Model for updating joint MimicMap!");
+      ROS_ERROR("mutable_robot_state_publisher: failed retrieve Robot Model for updating joint MimicMap!");
     }
     urdf_changed_ = true;
   }
