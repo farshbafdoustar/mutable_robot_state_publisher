@@ -39,13 +39,17 @@
 
 #include <ros/ros.h>
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <tf/tf.h>
 #include <tf/transform_broadcaster.h>
 #include <kdl/frames.hpp>
 #include <kdl/segment.hpp>
 #include <kdl/tree.hpp>
+#include <mutable_robot_state_publisher/robot_kdl_tree.h>
+#include <urdf/model.h>
 
-namespace robot_state_publisher{
+typedef std::map<std::string, boost::shared_ptr<urdf::JointMimic> > MimicMap;
+namespace mutable_robot_state_publisher{
 
 class SegmentPair
 {
@@ -58,23 +62,32 @@ public:
 };
 
 
-class RobotStatePublisher
+class RobotStatePublisher : public robot_kdl_tree::RobotKDLTree
 {
+  ros::NodeHandle nh_;
 public:
+  virtual bool init();
+
+  virtual void onURDFSwap(const std::string &link_name);
+
   /** Constructor
-   * \param tree The kinematic model of a robot, represented by a KDL Tree 
+   * \param tree The kinematic model of a robot, represented by a KDL Tree
    */
-  RobotStatePublisher(const KDL::Tree& tree);
+  RobotStatePublisher(const urdf::Model m);
 
   /// Destructor
   ~RobotStatePublisher(){};
 
-  /** Publish transforms to tf 
-   * \param joint_positions A map of joint names and joint positions. 
+  /** Publish transforms to tf
+   * \param joint_positions A map of joint names and joint positions.
    * \param time The time at which the joint positions were recorded
    */
-  void publishTransforms(const std::map<std::string, double>& joint_positions, const ros::Time& time);
+  void publishTransforms(const std::map<std::string, double>& joint_positions, const ros::Time& time, const std::string& tf_prefix);
   void publishFixedTransforms();
+  void publishFixedTransforms(const std::string& tf_prefix);
+  void setRobotDescriptionIfChanged();
+  void setJointMimicMap(const urdf::Model& model);
+  bool getJointMimicPositions(std::map<std::string, double>& joint_positions);
 
 private:
   void addChildren(const KDL::SegmentMap::const_iterator segment);
@@ -82,6 +95,12 @@ private:
 
   std::map<std::string, SegmentPair> segments_, segments_fixed_;
   tf::TransformBroadcaster tf_broadcaster_;
+
+  bool initialized_;
+  bool urdf_changed_;
+  MimicMap mimic_;
+  boost::shared_mutex mimic_mtx_;
+  ros::Publisher urdf_update_pub_;
 };
 
 
