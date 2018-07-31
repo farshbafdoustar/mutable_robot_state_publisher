@@ -2,8 +2,8 @@
 Changelog for package robot_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.0 (2018-07-30)
+------------------
 * Renaming to mutable_robot_state_publisher so can be run in parallel with original version.
 * Adding synchronization topic for updating URDF.
 * Updates mimic joint list on URDF swap
