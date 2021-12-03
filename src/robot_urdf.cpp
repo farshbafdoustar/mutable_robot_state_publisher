@@ -32,29 +32,32 @@
 // Maintainer: Ian McMahon <imcmahon@rethinkrobotics.com>
 
 #include "mutable_robot_state_publisher/robot_urdf.h"
+
 #include <urdf_parser/urdf_parser.h>
 
-namespace robot_urdf {
+namespace robot_urdf
+{
 
 // ----------------------------------------------------------------
 // Helper functions for editing XML element strings.
 
-static std::size_t xmlContentStart(const std::string & doc, const std::string & tag)
+static std::size_t xmlContentStart(const std::string& doc, const std::string& tag)
 {
   std::string start_tag = std::string("<") + tag;
   std::size_t pos = doc.find(start_tag);
   pos = doc.find('>', pos);
-  if (pos != std::string::npos)  ++pos;
+  if (pos != std::string::npos)
+    ++pos;
   return pos;
 }
 
-static std::size_t xmlContentEnd(const std::string & doc, const std::string & tag)
+static std::size_t xmlContentEnd(const std::string& doc, const std::string& tag)
 {
   std::string end_tag = std::string("</") + tag;
   return doc.rfind(end_tag);
 }
 
-static void xmlInsertContent(const std::string & content, const std::string & tag, std::string * doc)
+static void xmlInsertContent(const std::string& content, const std::string& tag, std::string* doc)
 {
   std::size_t pos = xmlContentEnd(*doc, tag);
   if (pos != std::string::npos)
@@ -67,29 +70,24 @@ static void xmlInsertContent(const std::string & content, const std::string & ta
   }
 }
 
-std::string xmlGetContent(const std::string & doc, const std::string & tag)
+std::string xmlGetContent(const std::string& doc, const std::string& tag)
 {
-  if (doc.empty())  return std::string();
+  if (doc.empty())
+    return std::string();
   std::size_t startPos = xmlContentStart(doc, tag);
   std::size_t endPos = xmlContentEnd(doc, tag);
-  if ((startPos == std::string::npos) ||
-      (endPos == std::string::npos))
+  if ((startPos == std::string::npos) || (endPos == std::string::npos))
   {
     return std::string();
   }
   return doc.substr(startPos, endPos - startPos);
 }
 
-
 // ----------------------------------------------------------------
 // RobotURDF
 
-
 RobotURDF::RobotURDF()
-    : m_urdfPtrFg(new urdf::Model())
-    , m_urdfPtrBg(new urdf::Model())
-    , m_valid(false)
-    , m_updateCount(0)
+  : m_urdfPtrFg(new urdf::Model()), m_urdfPtrBg(new urdf::Model()), m_valid(false), m_updateCount(0)
 {
 }
 
@@ -98,7 +96,7 @@ bool RobotURDF::init()
   return init(std::string("/robot_base_description"));
 }
 
-bool RobotURDF::init(const std::string & urdfParamName)
+bool RobotURDF::init(const std::string& urdfParamName)
 {
   std::string urdfString;
   ros::NodeHandle handle;
@@ -107,9 +105,7 @@ bool RobotURDF::init(const std::string & urdfParamName)
   if (handle.getParam(urdfParamName, urdfString))
   {
     m_urdfBase = urdfString;
-    m_valid =
-        m_urdfPtrFg->initString(urdfString) &&
-        m_urdfPtrBg->initString(urdfString);
+    m_valid = m_urdfPtrFg->initString(urdfString) && m_urdfPtrBg->initString(urdfString);
     if (m_valid)
     {
       regenerateUrdf();
@@ -120,8 +116,7 @@ bool RobotURDF::init(const std::string & urdfParamName)
       ROS_INFO("RobotURDF:  Subscribing to /robot/urdf");
       ros::NodeHandle handle("/robot");
       m_URDFConfigurationSubscriber =
-          handle.subscribe("urdf", 10, &RobotURDF::onURDFConfigurationMsg, this,
-                           ros::TransportHints().tcpNoDelay());
+          handle.subscribe("urdf", 10, &RobotURDF::onURDFConfigurationMsg, this, ros::TransportHints().tcpNoDelay());
     }
     else
     {
@@ -143,9 +138,8 @@ void RobotURDF::setRobotDescription()
   ros::param::set("/robot_description", m_urdfDoc);
 }
 
-void RobotURDF::loadUrdfFragmentParam(const std::string & paramName,
-                                      const std::string & linkName,
-                                      const std::string & jointName)
+void RobotURDF::loadUrdfFragmentParam(const std::string& paramName, const std::string& linkName,
+                                      const std::string& jointName)
 {
   std::string urdfString;
   ros::NodeHandle handle;
@@ -154,7 +148,7 @@ void RobotURDF::loadUrdfFragmentParam(const std::string & paramName,
   // for example the left gripper on a right-armed robot.
   if (handle.getParam(paramName, urdfString))
   {
-    URDFFragment & fragment = m_urdfMap[makeKey(linkName, jointName)];
+    URDFFragment& fragment = m_urdfMap[makeKey(linkName, jointName)];
     fragment.parentLink = linkName;
     fragment.jointName = jointName;
     // Store just the content of the XML fragment -- expected to be found in a "robot" element:
@@ -163,18 +157,17 @@ void RobotURDF::loadUrdfFragmentParam(const std::string & paramName,
   }
 }
 
-
 bool RobotURDF::regenerateUrdf()
 {
   static std::string root("robot");  // root element tag
 
   // Copy the base document:
   m_urdfDoc = m_urdfBase;
-  //for (auto & pair : m_urdfMap)
+  // for (auto & pair : m_urdfMap)
   for (URDFFragmentMap::iterator pair = m_urdfMap.begin(); pair != m_urdfMap.end(); pair++)
   {
     // insert the children of each fragment into the document:
-    std::string & frag = pair->second.xml;
+    std::string& frag = pair->second.xml;
     if (!frag.empty())
     {
       // Insert the fragment content into the base XML document:
@@ -186,7 +179,7 @@ bool RobotURDF::regenerateUrdf()
     m_urdfPtrBg->initString(m_urdfDoc);
     // TODO: handle invalid doc
   }
-  catch(std::exception & e)
+  catch (std::exception& e)
   {
     ROS_ERROR("Could not regenerate URDF: %s", e.what());
     return false;
@@ -195,17 +188,16 @@ bool RobotURDF::regenerateUrdf()
   return true;
 }
 
-
 // URDFConfiguration subscriber callback.
-void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDFConfiguration &config)
+void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDFConfiguration& config)
 {
-  const std::string & linkName = config.link;
+  const std::string& linkName = config.link;
   if (linkName.empty())
   {
     ROS_WARN("RobotURDF: URDFConfiguration has an empty link name!");
     return;
   }
-  const std::string & jointName = config.joint;
+  const std::string& jointName = config.joint;
   if (jointName.empty())
   {
     ROS_WARN("RobotURDF: URDFConfiguration has an empty joint name!");
@@ -214,8 +206,7 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
 
   double configTimestamp = config.time.toSec();
 
-  ROS_DEBUG("RobotURDF: URDFConfiguration %s/%s %f",
-           linkName.c_str(), jointName.c_str(), configTimestamp);
+  ROS_DEBUG("RobotURDF: URDFConfiguration %s/%s %f", linkName.c_str(), jointName.c_str(), configTimestamp);
   boost::unique_lock<boost::mutex> updateLock(m_updateMutex, boost::try_to_lock);
 
   std::string key = makeKey(linkName, jointName);
@@ -223,28 +214,27 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
   if (!updateLock.owns_lock())
   {
     // Only report this when we actually need to update the URDF.
-    if ((pair != m_urdfMap.end()) &&
-        (configTimestamp > pair->second.timestamp))
+    if ((pair != m_urdfMap.end()) && (configTimestamp > pair->second.timestamp))
     {
       // It's OK -- unless something is seriously broken we'll get the lock the next time around (or the next).
-      ROS_INFO("RobotURDF: URDFConfiguration update %s (%f) failed to acquire update lock.",
-               key.c_str(), configTimestamp);
+      ROS_INFO("RobotURDF: URDFConfiguration update %s (%f) failed to acquire update lock.", key.c_str(),
+               configTimestamp);
     }
     return;
   }
   double startChange = ros::Time::now().toSec();  // Time URDF updates.
 
-  URDFFragment & fragment = m_urdfMap[key];
+  URDFFragment& fragment = m_urdfMap[key];
   if (configTimestamp > fragment.timestamp)
   {
-    ROS_INFO("RobotURDF:  URDFConfiguration update #%d, %s (%f > %f)",
-              m_updateCount, key.c_str(), configTimestamp, fragment.timestamp);
-    std::string oldXml = fragment.xml;            // In case we have to revert it.
-    double oldTimestamp = fragment.timestamp;     // In case we have to revert it.
+    ROS_INFO("RobotURDF:  URDFConfiguration update #%d, %s (%f > %f)", m_updateCount, key.c_str(), configTimestamp,
+             fragment.timestamp);
+    std::string oldXml = fragment.xml;         // In case we have to revert it.
+    double oldTimestamp = fragment.timestamp;  // In case we have to revert it.
     fragment.parentLink = linkName;
     fragment.jointName = jointName;
     // Store just the content of the XML fragment -- expected to be found in a "robot" element:
-    //fragment.xml = xmlGetContent(hu::URDF::jsonToUrdf(config.urdf), "robot");
+    // fragment.xml = xmlGetContent(hu::URDF::jsonToUrdf(config.urdf), "robot");
     fragment.xml = xmlGetContent(config.urdf, "robot");
     // Note that if the fragment is empty (i.e., deleted) we still want to keep
     //  it so we don't handle the message again.
@@ -253,8 +243,7 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
 
     if (fragment.xml.empty() && !config.urdf.empty())
     {
-      ROS_ERROR("URDFConfiguration failed; invalid urdf fragment:\n%s\n",
-                config.urdf.c_str());
+      ROS_ERROR("URDFConfiguration failed; invalid urdf fragment:\n%s\n", config.urdf.c_str());
       m_valid = false;
       return;
     }
@@ -276,8 +265,8 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
       }
       else
       {
-        ROS_INFO("RobotURDF: URDFConfiguration update %s (%f) failed to acquire swap lock.",
-                 key.c_str(), configTimestamp);
+        ROS_INFO("RobotURDF: URDFConfiguration update %s (%f) failed to acquire swap lock.", key.c_str(),
+                 configTimestamp);
         // It's OK -- unless something is seriously broken we'll get the lock the next time around (or the next).
         // It shouldn't matter that onURDFChanged is not undone -- that should only have affected background resources.
         m_valid = false;
@@ -286,10 +275,8 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
     }
     else
     {
-      ROS_ERROR("RobotURDF: URDFConfiguration update %s (%f) failed!",
-                key.c_str(), configTimestamp);
+      ROS_ERROR("RobotURDF: URDFConfiguration update %s (%f) failed!", key.c_str(), configTimestamp);
     }
-
 
     if (!m_valid)
     {
@@ -302,7 +289,7 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
 
 // Invoked when the URDF changes in response to a URDFConfiguration message.
 // This should only affect background resources.
-bool RobotURDF::onURDFChange(const std::string &link_name)
+bool RobotURDF::onURDFChange(const std::string& link_name)
 {
   // Overriding subclasses must call this.
   m_valid = regenerateUrdf();
@@ -310,7 +297,7 @@ bool RobotURDF::onURDFChange(const std::string &link_name)
 }
 
 // Invoked after the URDF changes to swap resources.  This is a performance enhancement.
-void RobotURDF::onURDFSwap(const std::string &link_name)
+void RobotURDF::onURDFSwap(const std::string& link_name)
 {
   // Overriding subclasses must call this.
   swap();
