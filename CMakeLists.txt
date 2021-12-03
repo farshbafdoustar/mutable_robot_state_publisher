@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(mutable_robot_state_publisher)
 
+add_compile_options(--std=c++17)
+
 find_package(orocos_kdl REQUIRED)
 find_package(catkin REQUIRED
   COMPONENTS roscpp rosconsole rostime tf tf_conversions kdl_parser
