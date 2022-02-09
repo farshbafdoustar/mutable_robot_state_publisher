@@ -32,21 +32,20 @@
 // Maintainer: Ian McMahon <imcmahon@rethinkrobotics.com>
 
 #include "mutable_robot_state_publisher/robot_kdl_tree.h"
-#include <kdl_parser/kdl_parser.hpp>
+
 #include <string>
 
-namespace robot_kdl_tree {
+#include <kdl_parser/kdl_parser.hpp>
+
+namespace robot_kdl_tree
+{
 
 // ----------------------------------------------------------------
 // RobotKDLTree
 
-
-RobotKDLTree::RobotKDLTree()
-    : m_treeFg(new KDL::Tree())
-    , m_treeBg(new KDL::Tree())
+RobotKDLTree::RobotKDLTree() : m_treeFg(new KDL::Tree()), m_treeBg(new KDL::Tree())
 {
 }
-
 
 bool RobotKDLTree::init()
 {
@@ -57,7 +56,7 @@ bool RobotKDLTree::init()
   return false;
 }
 
-bool RobotKDLTree::init(const std::string & urdfParamName)
+bool RobotKDLTree::init(const std::string& urdfParamName)
 {
   if (RobotURDF::init(urdfParamName))
   {
@@ -101,14 +100,14 @@ bool RobotKDLTree::getTreeFromURDF()
   return m_valid;
 }
 
-
-bool RobotKDLTree::onURDFChange(const std::string &link_name)
+bool RobotKDLTree::onURDFChange(const std::string& link_name)
 {
-  if (!RobotURDF::onURDFChange(link_name))  return false;
+  if (!RobotURDF::onURDFChange(link_name))
+    return false;
   return getTreeFromURDF();
 }
 
-void RobotKDLTree::onURDFSwap(const std::string &link_name)
+void RobotKDLTree::onURDFSwap(const std::string& link_name)
 {
   RobotURDF::onURDFSwap(link_name);
   swap();

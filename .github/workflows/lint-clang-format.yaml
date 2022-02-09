@@ -1,0 +1,17 @@
+---
+name: lint-clang-format
+
+on: [push]
+
+jobs:
+  lint-clang-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v2
+      - name: Lint with clang-format-13
+        uses: DoozyX/clang-format-lint-action@v0.13
+        with:
+          source: "."
+          exclude: "./third_party ./external"
+          clangFormatVersion: 13
