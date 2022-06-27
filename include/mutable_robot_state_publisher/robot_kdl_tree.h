@@ -34,23 +34,23 @@
 #ifndef ROBOT_KDL_TREE_H_
 #define ROBOT_KDL_TREE_H_
 
-#include <robot_state_publisher/robot_urdf.h>
+#include <mutable_robot_state_publisher/robot_urdf.h>
 
-namespace robot_kdl_tree {
-
+namespace robot_kdl_tree
+{
 
 /** Container for the URDF model and KDL Tree associated with a robot.
  * Updates the KDL Tree when the underlying URDF changes.
  */
 class RobotKDLTree : public robot_urdf::RobotURDF
 {
- public:
+public:
   typedef boost::shared_ptr<RobotKDLTree> Ptr;
   typedef boost::shared_ptr<KDL::Tree> KDLTreePtr;
 
   static Ptr create()
   {
-    Ptr pRobotKDLTree= Ptr(new RobotKDLTree());
+    Ptr pRobotKDLTree = Ptr(new RobotKDLTree());
     if (pRobotKDLTree->init())
     {
       return pRobotKDLTree;
@@ -58,9 +58,9 @@ class RobotKDLTree : public robot_urdf::RobotURDF
     return Ptr();
   }
 
-  static Ptr create(const std::string & paramName)
+  static Ptr create(const std::string& paramName)
   {
-    Ptr pRobotKDLTree= Ptr(new RobotKDLTree());
+    Ptr pRobotKDLTree = Ptr(new RobotKDLTree());
     if (pRobotKDLTree->init(paramName))
     {
       return pRobotKDLTree;
@@ -68,31 +68,38 @@ class RobotKDLTree : public robot_urdf::RobotURDF
     return Ptr();
   }
 
- protected:
+protected:
   bool initFromURDF();
   bool getTreeFromURDF();
 
-  RobotKDLTree();                             // The default constructer is for testing only
+  RobotKDLTree();  // The default constructer is for testing only
 
-  void swap()  {  m_treeFg.swap(m_treeBg); }
+  void swap()
+  {
+    m_treeFg.swap(m_treeBg);
+  }
 
- public:
+public:
   virtual bool init();
-  virtual bool init(const std::string & urdfParamName);
+  virtual bool init(const std::string& urdfParamName);
 
-  virtual bool onURDFChange(const std::string &link_name);
-  virtual void onURDFSwap(const std::string &link_name);
+  virtual bool onURDFChange(const std::string& link_name);
+  virtual void onURDFSwap(const std::string& link_name);
 
-  const KDL::Tree & getTree()  { return *(m_treeFg.get()); }
-  const KDL::Tree & getBgTree()  { return *(m_treeBg.get()); }
+  const KDL::Tree& getTree()
+  {
+    return *(m_treeFg.get());
+  }
+  const KDL::Tree& getBgTree()
+  {
+    return *(m_treeBg.get());
+  }
 
- protected:
-  KDLTreePtr  m_treeFg;
-  KDLTreePtr  m_treeBg;
+protected:
+  KDLTreePtr m_treeFg;
+  KDLTreePtr m_treeBg;
 };
 
-
-} // namespace robot_kdl_tree
-
+}  // namespace robot_kdl_tree
 
 #endif /* ROBOT_KDL_TREE_H_ */

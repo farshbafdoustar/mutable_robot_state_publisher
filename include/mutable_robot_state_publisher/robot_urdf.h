@@ -35,22 +35,23 @@
 #define ROBOT_URDF_H_
 
 #include <map>
-#include <vector>
 #include <string>
-#include <boost/thread/shared_mutex.hpp>
+#include <vector>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/signals2.hpp>
+#include <boost/thread/shared_mutex.hpp>
 
-#include <kdl/kdl.hpp>
-#include <kdl/tree.hpp>
 #include <kdl/chain.hpp>
 #include <kdl/jntarray.hpp>
-
+#include <kdl/kdl.hpp>
+#include <kdl/tree.hpp>
+#include <mutable_robot_state_publisher/URDFConfiguration.h>
 #include <ros/ros.h>
 #include <urdf/model.h>
-#include <robot_state_publisher/URDFConfiguration.h>
 
-namespace robot_urdf {
+namespace robot_urdf
+{
 
 /**
  * \def BOOST_SIGNAL_DEFINE(name, returnType, handlerPrototype)
@@ -76,13 +77,19 @@ namespace robot_urdf {
  * \param handlerPrototype describes how the signal handlers will be invoked.
  *
  */
-#define BOOST_SIGNAL_DEFINE(name,returnType,handlerPrototype) \
-  public: \
-    typedef boost::signals2::signal<returnType handlerPrototype> name ## Signal; \
-  protected: \
-    name ## Signal m_signal ## name; \
-  public: \
-    inline name ## Signal & get ## name ## Signal() { return m_signal ## name ; }
+#define BOOST_SIGNAL_DEFINE(name, returnType, handlerPrototype)                                                        \
+                                                                                                                       \
+public:                                                                                                                \
+  typedef boost::signals2::signal<returnType handlerPrototype> name##Signal;                                           \
+                                                                                                                       \
+protected:                                                                                                             \
+  name##Signal m_signal##name;                                                                                         \
+                                                                                                                       \
+public:                                                                                                                \
+  inline name##Signal& get##name##Signal()                                                                             \
+  {                                                                                                                    \
+    return m_signal##name;                                                                                             \
+  }
 /**
  * \ingroup libutilities_signals
  * \def BOOST_SIGNAL_MEMBER(obj,name)
@@ -103,17 +110,15 @@ namespace robot_urdf {
  * BOOST_SIGNAL_MEMBER(this,Feeling)("great")
  * \endcode
  */
-#define BOOST_SIGNAL_MEMBER(objectWithSignal, name) \
-  (objectWithSignal)->get ## name ## Signal()
-//TODO: Remove Macro
-
+#define BOOST_SIGNAL_MEMBER(objectWithSignal, name) (objectWithSignal)->get##name##Signal()
+// TODO: Remove Macro
 
 /** Container for the URDF model associated with a robot.
  *  Subscribes to URDFConfiguration messages and updates the model accordingly.
  */
 class RobotURDF
 {
- public:
+public:
   /**
    * Emitted when the URDF changes.
    */
@@ -124,29 +129,36 @@ class RobotURDF
    */
   BOOST_SIGNAL_DEFINE(Swapped, void, (const std::string& link_name));
 
- public:
+public:
   typedef boost::shared_ptr<urdf::Model> UrdfPtr;
   typedef boost::shared_ptr<const urdf::Model> ConstUrdfPtr;
 
   RobotURDF();
 
   bool init();  // Load the default urdf parameter
-  bool init(const std::string & urdfParamName);
+  bool init(const std::string& urdfParamName);
 
+  bool isValid() const
+  {
+    return m_valid;
+  }
 
-  bool isValid() const { return m_valid; }
-
-
-  ConstUrdfPtr getUrdfPtr() { return m_urdfPtrFg; }
-  ConstUrdfPtr getUrdfBgPtr() { return m_urdfPtrBg; }
+  ConstUrdfPtr getUrdfPtr()
+  {
+    return m_urdfPtrFg;
+  }
+  ConstUrdfPtr getUrdfBgPtr()
+  {
+    return m_urdfPtrBg;
+  }
 
   // Write the current URDF to the /robot_description parameter:
   void setRobotDescription();
 
- protected:
+protected:
   typedef struct
   {
-    double      timestamp;     // Note that 0.0 is an invalid timestamp
+    double timestamp;  // Note that 0.0 is an invalid timestamp
     std::string parentLink;
     std::string jointName;
     std::string xml;
@@ -154,35 +166,37 @@ class RobotURDF
   typedef std::map<std::string, URDFFragment> URDFFragmentMap;
 
   URDFFragmentMap m_urdfMap;
-  std::string     m_urdfBase;    // Base URDF document
-  std::string     m_urdfDoc;     // Current URDF document, for reference
+  std::string m_urdfBase;  // Base URDF document
+  std::string m_urdfDoc;   // Current URDF document, for reference
 
   UrdfPtr m_urdfPtrFg;
   UrdfPtr m_urdfPtrBg;
-  void swap()  {  m_urdfPtrFg.swap(m_urdfPtrBg); }
+  void swap()
+  {
+    m_urdfPtrFg.swap(m_urdfPtrBg);
+  }
 
   bool m_valid;
   uint32_t m_updateCount;  // debug
-  ros::Subscriber         m_URDFConfigurationSubscriber;
+  ros::Subscriber m_URDFConfigurationSubscriber;
 
-  static std::string makeKey(const std::string & linkName, const std::string & jointName)
-    {  return linkName + "/" + jointName;  }
+  static std::string makeKey(const std::string& linkName, const std::string& jointName)
+  {
+    return linkName + "/" + jointName;
+  }
 
-  void loadUrdfFragmentParam(const std::string & paramName,
-                             const std::string & linkName,
-                             const std::string & jointName);
+  void loadUrdfFragmentParam(const std::string& paramName, const std::string& linkName, const std::string& jointName);
 
   bool regenerateUrdf();
 
-  void onURDFConfigurationMsg(const robot_state_publisher::URDFConfiguration &config);
-  virtual bool onURDFChange(const std::string &link_name);
-  virtual void onURDFSwap(const std::string &link_name);
+  void onURDFConfigurationMsg(const mutable_robot_state_publisher::URDFConfiguration& config);
+  virtual bool onURDFChange(const std::string& link_name);
+  virtual void onURDFSwap(const std::string& link_name);
 
- public:
-  mutable boost::shared_mutex m_swapMutex;    // Protect access while swapping shared pointers.
-  mutable boost::mutex m_updateMutex;         // Protect access while updating the URDF and things that depend on it.
+public:
+  mutable boost::shared_mutex m_swapMutex;  // Protect access while swapping shared pointers.
+  mutable boost::mutex m_updateMutex;       // Protect access while updating the URDF and things that depend on it.
 };
-
 
 }  // namespace robot_urdf
 

@@ -34,75 +34,52 @@
 
 /* Author: Wim Meeussen */
 
-#include <string>
+#ifndef JOINT_STATE_LISTENER_H
+#define JOINT_STATE_LISTENER_H
 
-#include <boost/thread/thread.hpp>
-
-#include <kdl_parser/kdl_parser.hpp>
+#include <kdl/tree.hpp>
 #include <ros/ros.h>
-#include <tf/transform_listener.h>
+#include <sensor_msgs/JointState.h>
 #include <urdf/model.h>
 
-#include "robot_state_publisher/joint_state_listener.h"
-#include <gtest/gtest.h>
+#include "mutable_robot_state_publisher/robot_state_publisher.h"
 
+using namespace std;
 using namespace ros;
-using namespace tf;
-using namespace robot_state_publisher;
+using namespace KDL;
 
-int g_argc;
-char** g_argv;
+typedef boost::shared_ptr<sensor_msgs::JointState const> JointStateConstPtr;
 
-#define EPS 0.01
+namespace mutable_robot_state_publisher
+{
 
-class TestPublisher : public testing::Test
+class JointStateListener
 {
 public:
-  JointStateListener* publisher;
-
-protected:
-  /// constructor
-  TestPublisher()
-  {
-  }
+  /** Constructor
+   * \param tree The kinematic model of a robot, represented by a KDL Tree
+   */
+  JointStateListener(const urdf::Model& m);
+  bool init();
 
   /// Destructor
-  ~TestPublisher()
-  {
-  }
+  ~JointStateListener();
+
+private:
+  void callbackJointState(const JointStateConstPtr& state);
+  void callbackFixedJoint(const ros::TimerEvent& e);
+  void callbackSaveUrdf(const ros::TimerEvent& e);
+
+  std::string tf_prefix_;
+  Duration publish_interval_;
+  Duration save_interval_;
+  mutable_robot_state_publisher::RobotStatePublisher state_publisher_;
+  Subscriber joint_state_sub_;
+  ros::Timer pub_timer_;
+  ros::Timer save_timer_;
+  ros::Time last_callback_time_;
+  std::map<std::string, ros::Time> last_publish_time_;
 };
+}  // namespace mutable_robot_state_publisher
 
-TEST_F(TestPublisher, test)
-{
-  ROS_INFO("Creating tf listener");
-  TransformListener tf;
-
-  ROS_INFO("Publishing joint state to robot state publisher");
-  ros::NodeHandle n;
-  ros::Publisher js_pub = n.advertise<sensor_msgs::JointState>("joint_states", 100);
-  sensor_msgs::JointState js_msg;
-  for (unsigned int i = 0; i < 100; i++)
-  {
-    js_msg.header.stamp = ros::Time::now();
-    js_pub.publish(js_msg);
-    ros::Duration(0.1).sleep();
-  }
-
-  SUCCEED();
-}
-
-int main(int argc, char** argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "test_robot_state_publisher");
-  ros::NodeHandle node;
-  boost::thread ros_thread(boost::bind(&ros::spin));
-
-  g_argc = argc;
-  g_argv = argv;
-  int res = RUN_ALL_TESTS();
-  ros_thread.interrupt();
-  ros_thread.join();
-
-  return res;
-}
+#endif
