@@ -49,7 +49,7 @@
 #include <tf/transform_broadcaster.h>
 #include <urdf/model.h>
 
-typedef std::map<std::string, boost::shared_ptr<urdf::JointMimic> > MimicMap;
+typedef std::map<std::string, std::shared_ptr<urdf::JointMimic> > MimicMap;
 namespace mutable_robot_state_publisher
 {
 

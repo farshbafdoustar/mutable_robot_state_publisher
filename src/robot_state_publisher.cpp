@@ -72,7 +72,7 @@ void RobotStatePublisher::setJointMimicMap(const urdf::Model& model)
   // get exclusive access for writing
   boost::unique_lock<boost::shared_mutex> lock(mimic_mtx_);
   mimic_.clear();
-  for (std::map<std::string, boost::shared_ptr<urdf::Joint> >::const_iterator i = model.joints_.begin();
+  for (std::map<std::string, std::shared_ptr<urdf::Joint> >::const_iterator i = model.joints_.begin();
        i != model.joints_.end(); i++)
   {
     if (i->second->mimic)
