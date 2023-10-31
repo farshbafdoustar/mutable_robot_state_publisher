@@ -193,7 +193,8 @@ bool RobotURDF::regenerateUrdf()
 bool RobotURDF::onURDFConfigurationService(mutable_robot_state_publisher::UpdateURDF::Request& req, mutable_robot_state_publisher::UpdateURDF::Response& resp)
 {
   
-  resp.success=updateURDF(req.configuration);;
+  resp.success=updateURDF(req.configuration);
+  ROS_INFO_STREAM("URDFConfiguration response: "<< resp.success);
   return true;
 }
 // URDFConfiguration subscriber callback.
@@ -218,6 +219,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
   }
 
   double configTimestamp = config.time.toSec();
+  ROS_INFO_STREAM("URDFConfiguration linkName: "<< linkName.c_str() << " URDFConfiguration jointName: "<< jointName.c_str());
 
   ROS_DEBUG("RobotURDF: URDFConfiguration %s/%s %f", linkName.c_str(), jointName.c_str(), configTimestamp);
   boost::unique_lock<boost::mutex> updateLock(m_updateMutex, boost::try_to_lock);
@@ -246,6 +248,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
     double oldTimestamp = fragment.timestamp;  // In case we have to revert it.
     fragment.parentLink = linkName;
     fragment.jointName = jointName;
+    ROS_INFO_STREAM("URDFConfiguration fragment.parentLink: "<< fragment.parentLink.c_str() << " URDFConfiguration fragment.jointName: "<< fragment.jointName.c_str());
     // Store just the content of the XML fragment -- expected to be found in a "robot" element:
     // fragment.xml = xmlGetContent(hu::URDF::jsonToUrdf(config.urdf), "robot");
     fragment.xml = xmlGetContent(config.urdf, "robot");
@@ -297,6 +300,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
       fragment.timestamp = oldTimestamp;
       fragment.xml = oldXml;
     }
+    ROS_INFO_STREAM("m_valid: " << m_valid);
     return m_valid;
   }
   return false;
