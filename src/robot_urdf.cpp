@@ -192,7 +192,7 @@ bool RobotURDF::regenerateUrdf()
 
 bool RobotURDF::onURDFConfigurationService(mutable_robot_state_publisher::UpdateURDF::Request& req, mutable_robot_state_publisher::UpdateURDF::Response& resp)
 {
-  
+  ROS_INFO_STREAM("start of onURDFConfigurationService: ");
   resp.success=updateURDF(req.configuration);
   ROS_INFO_STREAM("URDFConfiguration response: "<< resp.success);
   return true;
