@@ -311,6 +311,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
 bool RobotURDF::onURDFChange(const std::string& link_name)
 {
   // Overriding subclasses must call this.
+  ROS_INFO_STREAM("start of onURDFChange ");
   m_valid = regenerateUrdf();
   return m_valid;
 }
