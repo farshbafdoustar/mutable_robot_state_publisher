@@ -1,0 +1,6 @@
+#request
+mutable_robot_state_publisher/URDFConfiguration configuration
+
+---
+#response
+bool success

@@ -47,6 +47,7 @@
 #include <kdl/kdl.hpp>
 #include <kdl/tree.hpp>
 #include <mutable_robot_state_publisher/URDFConfiguration.h>
+#include <mutable_robot_state_publisher/UpdateURDF.h>
 #include <ros/ros.h>
 #include <urdf/model.h>
 
@@ -179,6 +180,7 @@ protected:
   bool m_valid;
   uint32_t m_updateCount;  // debug
   ros::Subscriber m_URDFConfigurationSubscriber;
+  ros::ServiceServer m_URDFConfigurationService;
 
   static std::string makeKey(const std::string& linkName, const std::string& jointName)
   {
@@ -188,10 +190,14 @@ protected:
   void loadUrdfFragmentParam(const std::string& paramName, const std::string& linkName, const std::string& jointName);
 
   bool regenerateUrdf();
+  bool updateURDF(const mutable_robot_state_publisher::URDFConfiguration& config);
 
+  bool onURDFConfigurationService(mutable_robot_state_publisher::UpdateURDF::Request& req, mutable_robot_state_publisher::UpdateURDF::Response& resp);
   void onURDFConfigurationMsg(const mutable_robot_state_publisher::URDFConfiguration& config);
   virtual bool onURDFChange(const std::string& link_name);
   virtual void onURDFSwap(const std::string& link_name);
+
+
 
 public:
   mutable boost::shared_mutex m_swapMutex;  // Protect access while swapping shared pointers.

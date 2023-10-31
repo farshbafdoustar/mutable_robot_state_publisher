@@ -14,6 +14,10 @@ add_message_files(DIRECTORY msg FILES
   URDFConfiguration.msg
 )
 
+add_service_files(DIRECTORY srv FILES
+  UpdateURDF.srv
+)
+
 generate_messages(DEPENDENCIES
   std_msgs
 )

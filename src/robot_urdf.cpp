@@ -117,6 +117,8 @@ bool RobotURDF::init(const std::string& urdfParamName)
       ros::NodeHandle handle("/robot");
       m_URDFConfigurationSubscriber =
           handle.subscribe("urdf", 10, &RobotURDF::onURDFConfigurationMsg, this, ros::TransportHints().tcpNoDelay());
+
+      m_URDFConfigurationService=handle.advertiseService("urdf", &RobotURDF::onURDFConfigurationService, this);
     }
     else
     {
@@ -188,20 +190,31 @@ bool RobotURDF::regenerateUrdf()
   return true;
 }
 
+bool RobotURDF::onURDFConfigurationService(mutable_robot_state_publisher::UpdateURDF::Request& req, mutable_robot_state_publisher::UpdateURDF::Response& resp)
+{
+  
+  resp.success=updateURDF(req.configuration);;
+  return true;
+}
 // URDFConfiguration subscriber callback.
 void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDFConfiguration& config)
+{
+  updateURDF(config);
+}
+
+bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguration& config)
 {
   const std::string& linkName = config.link;
   if (linkName.empty())
   {
     ROS_WARN("RobotURDF: URDFConfiguration has an empty link name!");
-    return;
+    return false;
   }
   const std::string& jointName = config.joint;
   if (jointName.empty())
   {
     ROS_WARN("RobotURDF: URDFConfiguration has an empty joint name!");
-    return;
+    return false;
   }
 
   double configTimestamp = config.time.toSec();
@@ -220,7 +233,7 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
       ROS_INFO("RobotURDF: URDFConfiguration update %s (%f) failed to acquire update lock.", key.c_str(),
                configTimestamp);
     }
-    return;
+    return false;
   }
   double startChange = ros::Time::now().toSec();  // Time URDF updates.
 
@@ -245,7 +258,7 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
     {
       ROS_ERROR("URDFConfiguration failed; invalid urdf fragment:\n%s\n", config.urdf.c_str());
       m_valid = false;
-      return;
+      return false;
     }
 
     // Update resources in the background in response to the URDF change:
@@ -284,7 +297,9 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
       fragment.timestamp = oldTimestamp;
       fragment.xml = oldXml;
     }
+    return m_valid;
   }
+  return false;
 }
 
 // Invoked when the URDF changes in response to a URDFConfiguration message.
