@@ -192,9 +192,9 @@ bool RobotURDF::regenerateUrdf()
 
 bool RobotURDF::onURDFConfigurationService(mutable_robot_state_publisher::UpdateURDF::Request& req, mutable_robot_state_publisher::UpdateURDF::Response& resp)
 {
-  ROS_INFO_STREAM("start of onURDFConfigurationService: ");
+  ROS_WARN("start of onURDFConfigurationService: ");
   resp.success=updateURDF(req.configuration);
-  ROS_INFO_STREAM("URDFConfiguration response: "<< resp.success);
+  ROS_WARN_STREAM("URDFConfiguration response: "<< resp.success);
   return true;
 }
 // URDFConfiguration subscriber callback.
@@ -205,7 +205,7 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
 
 bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguration& config)
 {
-  ROS_INFO_STREAM("start of updateURDF ");
+  ROS_WARN("start of updateURDF ");
   const std::string& linkName = config.link;
   if (linkName.empty())
   {
@@ -301,7 +301,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
       fragment.timestamp = oldTimestamp;
       fragment.xml = oldXml;
     }
-    ROS_INFO_STREAM("m_valid: " << m_valid);
+    ROS_WARN_STREAM("m_valid: " << m_valid?"TRUE":"FALSE");
     return m_valid;
   }
   return false;
