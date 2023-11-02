@@ -228,11 +228,18 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
 
   std::string key = makeKey(linkName, jointName);
   URDFFragmentMap::iterator pair = m_urdfMap.find(key);
+  ROS_WARN("before if (!updateLock.owns_lock()) ");
+  ROS_WARN("m_valid value before if (!updateLock.owns_lock()): '%s' ", m_valid ? "True" : "False");
   if (!updateLock.owns_lock())
   {
+    ROS_WARN("inside if (!updateLock.owns_lock()) ");
     // Only report this when we actually need to update the URDF.
     if ((pair != m_urdfMap.end()) && (configTimestamp > pair->second.timestamp))
     {
+      ROS_WARN("nested if in if (!updateLock.owns_lock()) ");
+      ROS_WARN("RobotURDF: URDFConfiguration update %s (%f) failed to acquire update lock.", key.c_str(),
+               configTimestamp);
+      ROS_WARN("m_valid value in if (!updateLock.owns_lock()): '%s' ", m_valid ? "True" : "False");
       // It's OK -- unless something is seriously broken we'll get the lock the next time around (or the next).
       ROS_INFO("RobotURDF: URDFConfiguration update %s (%f) failed to acquire update lock.", key.c_str(),
                configTimestamp);
@@ -304,7 +311,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
       fragment.timestamp = oldTimestamp;
       fragment.xml = oldXml;
     }
-    ROS_WARN_STREAM("m_valid: " << m_valid?"TRUE":"FALSE");
+    ROS_WARN("m_valid value end of RobotURDF::updateURDF: '%s' ", m_valid ? "True" : "False");
     return m_valid;
   }
   return false;
