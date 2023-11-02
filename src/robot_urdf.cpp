@@ -195,7 +195,7 @@ bool RobotURDF::onURDFConfigurationService(mutable_robot_state_publisher::Update
 {
   ROS_WARN("start of onURDFConfigurationService ");
   resp.success=updateURDF(req.configuration);
-  ROS_WARN("URDFConfiguration response '%s' : ", resp.success.c_str());
+  // ROS_WARN("URDFConfiguration response : ", resp.success);
   return true;
 }
 // URDFConfiguration subscriber callback.
