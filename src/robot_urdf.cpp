@@ -129,7 +129,7 @@ bool RobotURDF::init(const std::string& urdfParamName)
   {
     ROS_ERROR("RobotURDF: Parameter %s could not be found/read", urdfParamName.c_str());
   }
-  ROS_WARN("m_valid value end of RobotURDF::init: '%s' ", m_valid.c_str());
+  ROS_WARN("m_valid value end of RobotURDF::init: '%s' ", m_valid ? "True" : "False");
 
   return m_valid;
 }
@@ -268,7 +268,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
 
     // Update resources in the background in response to the URDF change:
     m_valid = onURDFChange(linkName);
-    ROS_WARN("m_valid value after call onURDFChange(linkname) is: '%s' ", m_valid.c_str());
+    ROS_WARN("m_valid value after call onURDFChange(linkname) is: '%s' ", m_valid ? "True" : "False");
     if (m_valid)
     {
       BOOST_SIGNAL_MEMBER(this, Changed)(linkName);
