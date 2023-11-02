@@ -129,6 +129,7 @@ bool RobotURDF::init(const std::string& urdfParamName)
   {
     ROS_ERROR("RobotURDF: Parameter %s could not be found/read", urdfParamName.c_str());
   }
+  ROS_WARN("m_valid value end of RobotURDF::init: '%s' ", m_valid.c_str());
 
   return m_valid;
 }
@@ -192,9 +193,9 @@ bool RobotURDF::regenerateUrdf()
 
 bool RobotURDF::onURDFConfigurationService(mutable_robot_state_publisher::UpdateURDF::Request& req, mutable_robot_state_publisher::UpdateURDF::Response& resp)
 {
-  ROS_WARN("start of onURDFConfigurationService: ");
+  ROS_WARN("start of onURDFConfigurationService ");
   resp.success=updateURDF(req.configuration);
-  ROS_WARN_STREAM("URDFConfiguration response: "<< resp.success);
+  ROS_WARN("URDFConfiguration response '%s' : ", resp.success.c_str());
   return true;
 }
 // URDFConfiguration subscriber callback.
@@ -220,7 +221,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
   }
 
   double configTimestamp = config.time.toSec();
-  ROS_INFO_STREAM("URDFConfiguration linkName: "<< linkName.c_str() << " URDFConfiguration jointName: "<< jointName.c_str());
+  ROS_WARN("RobotURDF: URDFConfiguration %s/%s %f", linkName.c_str(), jointName.c_str(), configTimestamp);
 
   ROS_DEBUG("RobotURDF: URDFConfiguration %s/%s %f", linkName.c_str(), jointName.c_str(), configTimestamp);
   boost::unique_lock<boost::mutex> updateLock(m_updateMutex, boost::try_to_lock);
@@ -243,13 +244,13 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
   URDFFragment& fragment = m_urdfMap[key];
   if (configTimestamp > fragment.timestamp)
   {
-    ROS_INFO("RobotURDF:  URDFConfiguration update #%d, %s (%f > %f)", m_updateCount, key.c_str(), configTimestamp,
+    ROS_WARN("RobotURDF:  URDFConfiguration update #%d, %s (%f > %f)", m_updateCount, key.c_str(), configTimestamp,
              fragment.timestamp);
     std::string oldXml = fragment.xml;         // In case we have to revert it.
     double oldTimestamp = fragment.timestamp;  // In case we have to revert it.
     fragment.parentLink = linkName;
     fragment.jointName = jointName;
-    ROS_INFO_STREAM("URDFConfiguration fragment.parentLink: "<< fragment.parentLink.c_str() << " URDFConfiguration fragment.jointName: "<< fragment.jointName.c_str());
+    ROS_WARN("URDFConfiguration fragment.parentLink: '%s'   URDFConfiguration fragment.jointName '%s' : ", fragment.parentLink.c_str() , fragment.jointName.c_str());
     // Store just the content of the XML fragment -- expected to be found in a "robot" element:
     // fragment.xml = xmlGetContent(hu::URDF::jsonToUrdf(config.urdf), "robot");
     fragment.xml = xmlGetContent(config.urdf, "robot");
@@ -267,6 +268,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
 
     // Update resources in the background in response to the URDF change:
     m_valid = onURDFChange(linkName);
+    ROS_WARN("m_valid value after call onURDFChange(linkname) is: '%s' ", m_valid.c_str());
     if (m_valid)
     {
       BOOST_SIGNAL_MEMBER(this, Changed)(linkName);
@@ -297,6 +299,7 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
 
     if (!m_valid)
     {
+      ROS_WARN("When the update fails restore the cached old data.");
       // When the update fails restore the cached old data.
       fragment.timestamp = oldTimestamp;
       fragment.xml = oldXml;
