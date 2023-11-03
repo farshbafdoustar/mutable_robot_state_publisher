@@ -129,7 +129,6 @@ bool RobotURDF::init(const std::string& urdfParamName)
   {
     ROS_ERROR("RobotURDF: Parameter %s could not be found/read", urdfParamName.c_str());
   }
-  ROS_WARN("m_valid value end of RobotURDF::init: '%s' ", m_valid ? "True" : "False");
 
   return m_valid;
 }
@@ -193,9 +192,7 @@ bool RobotURDF::regenerateUrdf()
 
 bool RobotURDF::onURDFConfigurationService(mutable_robot_state_publisher::UpdateURDF::Request& req, mutable_robot_state_publisher::UpdateURDF::Response& resp)
 {
-  ROS_WARN("start of onURDFConfigurationService ");
   resp.success=updateURDF(req.configuration);
-  // ROS_WARN("URDFConfiguration response : ", resp.success);
   return true;
 }
 // URDFConfiguration subscriber callback.
@@ -206,7 +203,6 @@ void RobotURDF::onURDFConfigurationMsg(const mutable_robot_state_publisher::URDF
 
 bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguration& config)
 {
-  ROS_WARN("start of updateURDF ");
   const std::string& linkName = config.link;
   if (linkName.empty())
   {
@@ -221,25 +217,17 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
   }
 
   double configTimestamp = config.time.toSec();
-  ROS_WARN("RobotURDF: URDFConfiguration %s/%s %f", linkName.c_str(), jointName.c_str(), configTimestamp);
-
   ROS_DEBUG("RobotURDF: URDFConfiguration %s/%s %f", linkName.c_str(), jointName.c_str(), configTimestamp);
   boost::unique_lock<boost::mutex> updateLock(m_updateMutex, boost::try_to_lock);
 
   std::string key = makeKey(linkName, jointName);
   URDFFragmentMap::iterator pair = m_urdfMap.find(key);
-  ROS_WARN("before if (!updateLock.owns_lock()) ");
-  ROS_WARN("m_valid value before if (!updateLock.owns_lock()): '%s' ", m_valid ? "True" : "False");
+  
   if (!updateLock.owns_lock())
   {
-    ROS_WARN("inside if (!updateLock.owns_lock()) ");
     // Only report this when we actually need to update the URDF.
     if ((pair != m_urdfMap.end()) && (configTimestamp > pair->second.timestamp))
     {
-      ROS_WARN("nested if in if (!updateLock.owns_lock()) ");
-      ROS_WARN("RobotURDF: URDFConfiguration update %s (%f) failed to acquire update lock.", key.c_str(),
-               configTimestamp);
-      ROS_WARN("m_valid value in if (!updateLock.owns_lock()): '%s' ", m_valid ? "True" : "False");
       // It's OK -- unless something is seriously broken we'll get the lock the next time around (or the next).
       ROS_INFO("RobotURDF: URDFConfiguration update %s (%f) failed to acquire update lock.", key.c_str(),
                configTimestamp);
@@ -275,7 +263,6 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
 
     // Update resources in the background in response to the URDF change:
     m_valid = onURDFChange(linkName);
-    ROS_WARN("m_valid value after call onURDFChange(linkname) is: '%s' ", m_valid ? "True" : "False");
     if (m_valid)
     {
       BOOST_SIGNAL_MEMBER(this, Changed)(linkName);
@@ -311,7 +298,6 @@ bool RobotURDF::updateURDF(const mutable_robot_state_publisher::URDFConfiguratio
       fragment.timestamp = oldTimestamp;
       fragment.xml = oldXml;
     }
-    ROS_WARN("m_valid value end of RobotURDF::updateURDF: '%s' ", m_valid ? "True" : "False");
     return m_valid;
   }
   return false;
